@@ -279,27 +279,11 @@ Vim-style tabs with =:tabnew=.
  #+END_SRC
 
 
-Borrowed from Sacha Chua's configuration. Light-on-dark color theme,  
+Use a light-on-dark scheme
 
- #+BEGIN_SRC emacs-lisp
-(defadvice color-theme-alist (around sacha activate)
-  (if (ad-get-arg 0)
-      ad-do-it
-    nil))
-(use-package color-theme)
-(use-package color-theme-solarized)
-(defun my/setup-color-theme ()
-  (interactive)
-  (color-theme-solarized-dark)
-  (set-face-foreground 'secondary-selection "darkblue")
-  (set-face-background 'secondary-selection "lightblue")
-  (set-face-background 'font-lock-doc-face "black")
-  (set-face-foreground 'font-lock-doc-face "wheat")
-  (set-face-background 'font-lock-string-face "black")
-  (set-face-foreground 'org-todo "green")
-  (set-face-background 'org-todo "black"))
-
-(eval-after-load 'color-theme (my/setup-color-theme)) #+END_SRC
+#+BEGIN_SRC emacs-lisp
+(load-theme 'zenburn t)
+#+END_SRC
 
  #+BEGIN_SRC emacs-lisp
  ;; Go straight to another file on startup
