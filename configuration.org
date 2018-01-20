@@ -1,0 +1,329 @@
+This is my Emacs configuration file. It is loaded by =.emacs=. Org mode will
+execute the code blocks.
+
+*NOTE:* Don't edit the =configuration.el= file in this directory.
+It is created by Org mode. Only edit this one.
+
+To get help: =C-h C-h=
+To get help on a mode: =C-h m=
+
+Some parts of this file were copied from other files and tutorials.
+* Configuration
+** Install Packages
+   
+ This is a list of packages to install. Additional packages have been manually
+ added to the =vendor= directory.
+
+ #+BEGIN_SRC emacs-lisp
+   ;; Packages to install (alternative to using =M-x package-install=)
+   ;; Additional packages have been manually added to the =vendor=
+   ;; directory.
+   (defvar my-packages
+     '(
+       evil
+       evil-tabs
+       evil-magit
+       evil-leader
+       evil-org
+       helm
+       magit
+       ace-jump-mode
+
+       ;; Themes
+       leuven-theme
+       zenburn-theme
+
+       ;; Language
+       racket-mode
+       rust-mode
+       cargo
+       ))
+
+   (dolist (p my-packages)
+     (when (not (package-installed-p p))
+       (package-install p)))
+ #+END_SRC
+
+** Package Settings
+*** Evil
+
+#+BEGIN_SRC emacs-lisp
+     (require 'evil)
+     (require 'evil-leader)
+     (evil-mode t)
+     ;; allow for pasting over selected text
+     (fset 'evil-visual-update-x-selection 'ignore)
+     ;; turn off evil mode for the repl
+     (add-to-list 'evil-emacs-state-modes 'REPL)
+
+     ;; Use tab for identation
+     (define-key evil-insert-state-map (kbd "TAB") 'tab-to-tab-stop)
+
+     (evil-leader/set-leader "<SPC>")
+     (global-evil-leader-mode)
+     (evil-leader/set-key
+       "f" 'helm-find-files
+       "b" 'helm-mini
+       "w" 'persp-switch
+       "-" 'text-scale-decrease
+       "+" 'text-scale-increase
+       "d" 'neotree-toggle
+       "x" 'helm-M-x
+       "r" 'helm-M-x
+       "k" 'kill-buffer
+       "n" 'elscreen-create) ; new tab
+
+     ;; leader maps for org mode
+     (evil-leader/set-key-for-mode 'org-mode
+       "t"  'org-show-todo-tree
+       "a"  'org-agenda
+       "c"  'org-archive-subtree
+       "l"  'evil-org-open-links
+       "o"  'org-open-at-point
+       "e"  'show-branches)
+
+  ;; make Evil's sentence navigation closer to Vim's
+  (setf sentence-end-double-space nil)
+#+END_SRC
+
+*** Evil Tabs
+
+Vim-style tabs with =:tabnew=.
+
+#+BEGIN_SRC emacs-lisp
+(global-evil-tabs-mode t)
+#+END_SRC
+
+*** Helm
+
+#+BEGIN_SRC emacs-lisp
+;; See: https://github.com/emacs-helm/helm/wiki#install
+(require 'helm)
+(require 'helm-config)
+
+;; See:
+;; http://cachestocaches.com/2016/12/vim-within-emacs-anecdotal-guide/
+
+(define-key helm-map (kbd "C-j") 'helm-next-line)
+(define-key helm-map (kbd "C-k") 'helm-previous-line)
+
+;; This next line overrides Emacs' help keybinding.
+;; (define-key helm-map (kbd "C-h") 'helm-next-source)
+;; (define-key helm-map (kbd "C-S-h") 'describe-key)
+;; (define-key helm-map (kbd "C-l") (kbd "RET"))
+(define-key helm-map [escape] 'helm-keyboard-quit)
+;; TODO fix this. Emacs can't find helm-find-files-map
+; (dolist (keymap (list helm-find-files-map helm-read-file-map))
+;   (define-key keymap (kbd "C-l") 'helm-execute-persistent-action)
+;   (define-key keymap (kbd "C-h") 'helm-find-files-up-one-level)
+;   (define-key keymap (kbd "C-S-h") 'describe-key))
+
+;; See:
+;; http://cachestocaches.com/2016/12/vim-within-emacs-anecdotal-guide/
+(define-key evil-ex-map "b " 'helm-mini)
+(define-key evil-ex-map "e" 'helm-find-files)
+
+
+;; The default "C-x c" is quite close to "C-x C-c", which quits Emacs.
+;; Changed to "C-c h". Note: We must set "C-c h" globally, because we
+;; cannot change `helm-command-prefix-key' once `helm-config' is loaded.
+(global-set-key (kbd "C-c h") 'helm-command-prefix)
+(global-unset-key (kbd "C-x c"))
+
+;; Use helm fo finding functions, files and bookmarks
+(global-set-key (kbd "M-x") 'helm-M-x)
+(global-set-key (kbd "C-x r b") #'helm-filtered-bookmarks)
+(global-set-key (kbd "C-x C-f") #'helm-find-files)
+
+
+(setq helm-buffers-fuzzy-matching t
+      helm-recentf-fuzzy-match    t)
+(setq recentf-max-menu-items 1000)
+
+(define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action) ; rebind tab to run persistent action
+(define-key helm-map (kbd "C-i") 'helm-execute-persistent-action) ; make TAB work in terminal
+(define-key helm-map (kbd "C-z")  'helm-select-action) ; list actions using C-z
+
+
+(setq helm-split-window-in-side-p           t ; open helm buffer inside current window, not occupy whole other window
+      helm-move-to-line-cycle-in-source     t ; move to end or beginning of source when reaching top or bottom of source.
+      helm-ff-search-library-in-sexp        t ; search for library in `require' and `declare-function' sexp.
+      helm-scroll-amount                    8 ; scroll 8 lines other window using M-<next>/M-<prior>
+      helm-ff-file-name-history-use-recentf t)
+
+(helm-mode 1)
+#+END_SRC
+
+*** Magit
+
+#+BEGIN_SRC emacs-lisp
+   (require 'evil-magit)
+   (global-set-key (kbd "C-x g") 'magit-status)
+#+END_SRC
+
+*** Org Mode
+#+BEGIN_SRC emacs-lisp
+
+  (require 'evil-org)
+  (add-hook 'org-mode-hook 'evil-org-mode)
+  (evil-org-set-key-theme '(navigation insert textobjects additional calendar))
+  (require 'evil-leader)
+  (global-evil-leader-mode)
+
+  (org-babel-do-load-languages
+  'org-babel-load-languages
+  '((scheme . t)
+   (emacs-lisp . t)
+   (python . t)
+   (racket . t)
+   (rust . t)
+   ))
+
+#+END_SRC
+*** Ace Jump
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'load-path "which-folder-ace-jump-mode-file-in/")
+(require 'ace-jump-mode)
+(define-key global-map (kbd "C-c SPC") 'ace-jump-mode)
+#+END_SRC
+*** Startup Commands
+
+#+BEGIN_SRC emacs-lisp
+;; Create a new tab and switch back to the start.org buffer.
+(elscreen-create)
+(evil-tabs-goto-tab)
+#+END_SRC
+
+(require 'evil)
+(evil-mode t)
+** Editing
+
+ Highlight matching parentheses and lines.
+
+ #+BEGIN_SRC emacs-lisp
+    (require 'paren)
+    (show-paren-mode 1)
+    (global-hl-line-mode 1)
+ #+END_SRC
+
+ Use spaces rather than tabs.
+ #+BEGIN_SRC emacs-lisp
+   (setq-default indent-tabs-mode nil)
+   (setq-default tab-width 4)
+   (setq indent-line-function 'insert-tab)
+   (setq org-src-tab-acts-natively t)
+ #+END_SRC
+
+ When you visit a file, point goes to the last place where it
+ was when you previously visited the same file.
+ http://www.emacswiki.org/emacs/SavePlace
+ keep track of saved places in ~/.emacs.d/places
+
+ #+BEGIN_SRC emacs-lisp
+    (require 'saveplace)
+    (setq-default save-place t)
+    (setq save-place-file (concat user-emacs-directory "places"))
+ #+END_SRC
+
+ Emacs can automatically create backup files. This tells Emacs to
+ put all backups in ~/.emacs.d/backups. More info:
+ http://www.gnu.org/software/emacs/manual/html_node/elisp/Backup-Files.html
+
+ #+BEGIN_SRC emacs-lisp
+    (setq backup-directory-alist `(("." . ,(concat user-emacs-directory
+                                                   "backups"))))
+    (setq auto-save-default t)
+ #+END_SRC
+
+ Set commenting keybinding.
+
+ #+BEGIN_SRC emacs-lisp
+ (defun toggle-comment-on-line ()
+   "comment or uncomment current line"
+   (interactive)
+   (comment-or-uncomment-region (line-beginning-position) (line-end-position)))
+ (global-set-key (kbd "C-;") 'toggle-comment-on-line)
+ #+END_SRC
+
+ Turn on recent file mode so that you can more easily switch to recently edited files when you first start emacs
+
+ #+BEGIN_SRC emacs-lisp
+ (setq recentf-save-file (concat user-emacs-directory ".recentf"))
+ (require 'recentf)
+ (recentf-mode 1)
+ #+END_SRC
+** Theme and Appearance
+   
+ Turn on line numbers.
+
+ #+BEGIN_SRC emacs-lisp
+    (global-linum-mode)
+ #+END_SRC
+
+ Set the default font.
+ #+BEGIN_SRC emacs-lisp
+ (set-default-font "monospace-15")
+ (setq line-spacing '0.25)
+
+ ;; increase and decrease text size
+ (global-set-key (kbd "C-=") 'text-scale-increase)
+ (global-set-key (kbd "C--") 'text-scale-decrease)
+ #+END_SRC
+
+ Remove the toolbar and scrollbar. Enable the menu bar.
+
+ #+BEGIN_SRC emacs-lisp
+ (if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
+ (if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
+ (if (fboundp 'menu-bar-mode) (menu-bar-mode 1))
+ #+END_SRC
+
+
+Borrowed from Sacha Chua's configuration. Light-on-dark color theme,  
+
+ #+BEGIN_SRC emacs-lisp
+(defadvice color-theme-alist (around sacha activate)
+  (if (ad-get-arg 0)
+      ad-do-it
+    nil))
+(use-package color-theme)
+(use-package color-theme-solarized)
+(defun my/setup-color-theme ()
+  (interactive)
+  (color-theme-solarized-dark)
+  (set-face-foreground 'secondary-selection "darkblue")
+  (set-face-background 'secondary-selection "lightblue")
+  (set-face-background 'font-lock-doc-face "black")
+  (set-face-foreground 'font-lock-doc-face "wheat")
+  (set-face-background 'font-lock-string-face "black")
+  (set-face-foreground 'org-todo "green")
+  (set-face-background 'org-todo "black"))
+
+(eval-after-load 'color-theme (my/setup-color-theme)) #+END_SRC
+
+ #+BEGIN_SRC emacs-lisp
+ ;; Go straight to another file on startup
+ (setq inhibit-startup-message t)
+ (find-file "~/org/emacs.org")
+ #+END_SRC
+** Language Configuration
+*** Racket 
+#+BEGIN_SRC emacs-lisp
+ (require 'racket-mode)
+
+ (setq racket-racket-program "\"C:/Program Files/Racket/racket.exe\"")
+ (setq racket-raco-program "\"C:/Program Files/Racket/raco.exe\"")
+ (setq org-babel-racket-command "\"C:/Program Files/Racket/racket.exe\"")
+ #+END_SRC
+
+
+ 
+ 
+*** Rust
+#+BEGIN_SRC emacs-lisp
+  (require 'rust-mode)
+  (autoload 'rust-mode "rust-mode" nil t)
+  (add-to-list 'auto-mode-alist '("\\.rs\\'" . rust-mode))
+  (add-hook 'rust-mode-hook 'cargo-minor-mode)
+#+END_SRC
+*** 
