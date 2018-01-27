@@ -27,7 +27,6 @@ Some parts of this file were copied from other files and tutorials.
        evil-org
        helm
        magit
-       ace-jump-mode
 
        ;; Themes
        leuven-theme
@@ -37,6 +36,9 @@ Some parts of this file were copied from other files and tutorials.
        racket-mode
        rust-mode
        cargo
+
+       ;; RSS
+       elfeed
        ))
 
    (dolist (p my-packages)
@@ -162,22 +164,25 @@ Vim-style tabs with =:tabnew=.
 #+END_SRC
 
 *** Org Mode
+**** Configure org to work with EVIL key bindings
 #+BEGIN_SRC emacs-lisp
+(require 'evil-org)
+(add-hook 'org-mode-hook 'evil-org-mode)
+(evil-org-set-key-theme '(navigation insert textobjects additional calendar))
+(require 'evil-leader)
+(global-evil-leader-mode)
+#+END_SRC
 
-  (require 'evil-org)
-  (add-hook 'org-mode-hook 'evil-org-mode)
-  (evil-org-set-key-theme '(navigation insert textobjects additional calendar))
-  (require 'evil-leader)
-  (global-evil-leader-mode)
-
-  (org-babel-do-load-languages
-  'org-babel-load-languages
-  '((scheme . t)
-   (emacs-lisp . t)
-   (python . t)
-   (racket . t)
-   (rust . t)
-   ))
+**** Org babel configuration for literate programming
+#+BEGIN_SRC emacs-list
+    (org-babel-do-load-languages
+    'org-babel-load-languages
+    '((scheme . t)
+    (emacs-lisp . t)
+    (python . t)
+    (racket . t)
+    (rust . t)
+    ))
 
 #+END_SRC
 *** Ace Jump
@@ -196,62 +201,106 @@ Vim-style tabs with =:tabnew=.
 
 (require 'evil)
 (evil-mode t)
+*** Elfeed RSS
+#+BEGIN_SRC emacs-lisp
+  (setq elfeed-feeds
+        '(
+        "http://xkcd.com/rss.xml"
+        "https://www.jimtownmade.com/the-jimtown-enquirer?format=RSS"
+        "https://mechanical-sympathy.blogspot.com/feeds/posts/default?alt=rss"
+        "http://www.scottaaronson.com/blog/?feed=rss2"
+        "http://www.stefankrause.net/wp/?feed=rss2"
+        "http://eli.thegreenplace.net/feeds/all.atom.xml"
+        "http://blog.mikemccandless.com/feeds/posts/default?alt=rss"
+        "http://lambda-the-ultimate.org/rss.xml"
+        "http://slatestarcodex.com/feed/"
+        "http://planetdjango.org/feed/"
+        "https://ericlippert.com/feed/"
+        "https://stackoverflow.blog/engineering/feed/"
+        "https://www.joelonsoftware.com/feed/"
+        "http://feeds.hanselman.com/ScottHanselman"
+        "https://80000hours.org/feed/"
+        "https://this-week-in-rust.org/rss.xml"
+        "http://lesswrong.com/.rss"
+        "https://jvns.ca/"
+  ))
+#+END_SRC
+
 ** Editing
+   
+*** Use utf-8
+    
+#+BEGIN_SRC emacs-lisp
+(prefer-coding-system 'utf-8)
+(set-default-coding-systems 'utf-8)
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+;; backwards compatibility as default-buffer-file-coding-system
+;; is deprecated in 23.2.
+(if (boundp 'buffer-file-coding-system)
+    (setq-default buffer-file-coding-system 'utf-8)
+  (setq default-buffer-file-coding-system 'utf-8))
 
- Highlight matching parentheses and lines.
+;; Treat clipboard input as UTF-8 string first; compound text next, etc.
+(setq x-select-request-type '(UTF8_STRING COMPOUND_TEXT TEXT STRING))
 
- #+BEGIN_SRC emacs-lisp
-    (require 'paren)
-    (show-paren-mode 1)
-    (global-hl-line-mode 1)
- #+END_SRC
+#+END_SRC
+*** Syntax higlighting and tabs
 
- Use spaces rather than tabs.
- #+BEGIN_SRC emacs-lisp
-   (setq-default indent-tabs-mode nil)
-   (setq-default tab-width 4)
-   (setq indent-line-function 'insert-tab)
-   (setq org-src-tab-acts-natively t)
- #+END_SRC
+  Highlight matching parentheses and lines.
 
- When you visit a file, point goes to the last place where it
- was when you previously visited the same file.
- http://www.emacswiki.org/emacs/SavePlace
- keep track of saved places in ~/.emacs.d/places
+  #+BEGIN_SRC emacs-lisp
+     (require 'paren)
+     (show-paren-mode 1)
+     (global-hl-line-mode 1)
+  #+END_SRC
 
- #+BEGIN_SRC emacs-lisp
-    (require 'saveplace)
-    (setq-default save-place t)
-    (setq save-place-file (concat user-emacs-directory "places"))
- #+END_SRC
+  Use spaces rather than tabs.
+  #+BEGIN_SRC emacs-lisp
+    (setq-default indent-tabs-mode nil)
+    (setq-default tab-width 4)
+    (setq indent-line-function 'insert-tab)
+    (setq org-src-tab-acts-natively t)
+  #+END_SRC
 
- Emacs can automatically create backup files. This tells Emacs to
- put all backups in ~/.emacs.d/backups. More info:
- http://www.gnu.org/software/emacs/manual/html_node/elisp/Backup-Files.html
+  When you visit a file, point goes to the last place where it
+  was when you previously visited the same file.
+  http://www.emacswiki.org/emacs/SavePlace
+  keep track of saved places in ~/.emacs.d/places
 
- #+BEGIN_SRC emacs-lisp
-    (setq backup-directory-alist `(("." . ,(concat user-emacs-directory
-                                                   "backups"))))
-    (setq auto-save-default t)
- #+END_SRC
+  #+BEGIN_SRC emacs-lisp
+     (require 'saveplace)
+     (setq-default save-place t)
+     (setq save-place-file (concat user-emacs-directory "places"))
+  #+END_SRC
 
- Set commenting keybinding.
+  Emacs can automatically create backup files. This tells Emacs to
+  put all backups in ~/.emacs.d/backups. More info:
+  http://www.gnu.org/software/emacs/manual/html_node/elisp/Backup-Files.html
 
- #+BEGIN_SRC emacs-lisp
- (defun toggle-comment-on-line ()
-   "comment or uncomment current line"
-   (interactive)
-   (comment-or-uncomment-region (line-beginning-position) (line-end-position)))
- (global-set-key (kbd "C-;") 'toggle-comment-on-line)
- #+END_SRC
+  #+BEGIN_SRC emacs-lisp
+     (setq backup-directory-alist `(("." . ,(concat user-emacs-directory
+                                                    "backups"))))
+     (setq auto-save-default t)
+  #+END_SRC
 
- Turn on recent file mode so that you can more easily switch to recently edited files when you first start emacs
+  Set commenting keybinding.
 
- #+BEGIN_SRC emacs-lisp
- (setq recentf-save-file (concat user-emacs-directory ".recentf"))
- (require 'recentf)
- (recentf-mode 1)
- #+END_SRC
+  #+BEGIN_SRC emacs-lisp
+  (defun toggle-comment-on-line ()
+    "comment or uncomment current line"
+    (interactive)
+    (comment-or-uncomment-region (line-beginning-position) (line-end-position)))
+  (global-set-key (kbd "C-;") 'toggle-comment-on-line)
+  #+END_SRC
+
+  Turn on recent file mode so that you can more easily switch to recently edited files when you first start emacs
+
+  #+BEGIN_SRC emacs-lisp
+  (setq recentf-save-file (concat user-emacs-directory ".recentf"))
+  (require 'recentf)
+  (recentf-mode 1)
+  #+END_SRC
 ** Theme and Appearance
    
  Turn on line numbers.
@@ -311,3 +360,4 @@ Use a light-on-dark scheme
   (add-hook 'rust-mode-hook 'cargo-minor-mode)
 #+END_SRC
 *** 
+
