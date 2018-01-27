@@ -185,22 +185,10 @@ Vim-style tabs with =:tabnew=.
     ))
 
 #+END_SRC
-*** Ace Jump
-#+BEGIN_SRC emacs-lisp
-(add-to-list 'load-path "which-folder-ace-jump-mode-file-in/")
-(require 'ace-jump-mode)
-(define-key global-map (kbd "C-c SPC") 'ace-jump-mode)
-#+END_SRC
 *** Startup Commands
-
-#+BEGIN_SRC emacs-lisp
-;; Create a new tab and switch back to the start.org buffer.
-(elscreen-create)
-(evil-tabs-goto-tab)
-#+END_SRC
-
 (require 'evil)
 (evil-mode t)
+
 *** Elfeed RSS
 #+BEGIN_SRC emacs-lisp
   (setq elfeed-feeds
@@ -337,7 +325,7 @@ Use a light-on-dark scheme
  #+BEGIN_SRC emacs-lisp
  ;; Go straight to another file on startup
  (setq inhibit-startup-message t)
- (find-file "~/org/emacs.org")
+ (find-file (concat org-directory "emacs.org"))
  #+END_SRC
 ** Language Configuration
 *** Racket 
@@ -360,4 +348,4 @@ Use a light-on-dark scheme
   (add-hook 'rust-mode-hook 'cargo-minor-mode)
 #+END_SRC
 *** 
-
+    
