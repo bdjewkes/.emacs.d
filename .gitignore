@@ -33,3 +33,6 @@ projectile-bookmarks.eld
 
 # compiled configuration
 configuration.el
+
+# System specific
+.recentf

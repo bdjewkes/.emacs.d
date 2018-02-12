@@ -9,10 +9,14 @@ To get help on a mode: =C-h m=
 
 Some parts of this file were copied from other files and tutorials.
 * Configuration
-** Install Packages
-   
- This is a list of packages to install. Additional packages have been manually
- added to the =vendor= directory.
+** Global Configuration
+Changes by git should automatically be refreshed the files files are changed on disk (such as when a git checkout occurs).
+#+BEGIN_SRC emacs-lisp
+(global-auto-revert-mode t)
+#+END_SRC
+
+** Install Packages 
+ This is a list of packages to install, to make restoring configuration more streamlined across devices.
 
  #+BEGIN_SRC emacs-lisp
    ;; Packages to install (alternative to using =M-x package-install=)
@@ -20,12 +24,18 @@ Some parts of this file were copied from other files and tutorials.
    ;; directory.
    (defvar my-packages
      '(
+       ;; Emacs vim
        evil
-       evil-tabs
        evil-magit
        evil-leader
        evil-org
+
+       ;; navigation
        helm
+       projectile
+       helm-projectile
+
+       ;; git and source control
        magit
 
        ;; Themes
@@ -39,6 +49,8 @@ Some parts of this file were copied from other files and tutorials.
 
        ;; RSS
        elfeed
+
+
        ))
 
    (dolist (p my-packages)
@@ -46,8 +58,8 @@ Some parts of this file were copied from other files and tutorials.
        (package-install p)))
  #+END_SRC
 
-** Package Settings
-*** Evil
+** Package Settings and Installation
+*** Evil 
 
 #+BEGIN_SRC emacs-lisp
      (require 'evil)
@@ -87,15 +99,7 @@ Some parts of this file were copied from other files and tutorials.
   ;; make Evil's sentence navigation closer to Vim's
   (setf sentence-end-double-space nil)
 #+END_SRC
-
-*** Evil Tabs
-
-Vim-style tabs with =:tabnew=.
-
-#+BEGIN_SRC emacs-lisp
-(global-evil-tabs-mode t)
-#+END_SRC
-
+        
 *** Helm
 
 #+BEGIN_SRC emacs-lisp
@@ -214,6 +218,19 @@ Vim-style tabs with =:tabnew=.
   ))
 #+END_SRC
 
+*** Projectile    
+Enable projectile. Configuration reference: http://tuhdo.github.io/helm-projectile.html:
+#+BEGIN_SRC emacs-lisp
+  (require 'projectile)
+  (require 'helm-projectile)
+  (projectile-mode)
+  (setq projectile-completion-system 'helm)
+
+  ;; use indexing external indexing tools
+  (setq projectile-indexing-method 'alien)
+  ;; Use helm 
+  (setq projectile-switch-project-action 'helm-projectile)
+#+END_SRC
 ** Editing
    
 *** Use utf-8

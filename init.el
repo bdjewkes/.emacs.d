@@ -13,3 +13,17 @@
 
 
 (org-babel-load-file "~/.emacs.d/configuration.org")
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   (quote
+    (dumb-jump neotree zenburn-theme racket-mode ob-rust markdown-mode leuven-theme jinja2-mode helm-projectile geiser flycheck evil-tabs evil-paredit evil-org evil-magit evil-leader elfeed distinguished-theme darktooth-theme color-theme-solarized color-theme-sanityinc-tomorrow cargo base16-theme auto-complete ace-jump-mode))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
