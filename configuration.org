@@ -17,8 +17,10 @@ Changes by git should automatically be refreshed the files files are changed on 
 
 ** Install Packages 
  This is a list of packages to install, to make restoring configuration more streamlined across devices.
+ I am in the process of migrating to using use-package, which moves package installation+configration+dependencies
+ to a single declaration.
 
- #+BEGIN_SRC emacs-lisp
+#+BEGIN_SRC emacs-lisp
    ;; Packages to install (alternative to using =M-x package-install=)
    ;; Additional packages have been manually added to the =vendor=
    ;; directory.
@@ -41,6 +43,7 @@ Changes by git should automatically be refreshed the files files are changed on 
        ;; Themes
        leuven-theme
        zenburn-theme
+       doom-themes
 
        ;; Language
        racket-mode
@@ -62,6 +65,8 @@ Changes by git should automatically be refreshed the files files are changed on 
 *** Evil 
 
 #+BEGIN_SRC emacs-lisp
+     (setq evil-want-C-u-scroll t)
+     (setq evil-want-C-i-jump nil)
      (require 'evil)
      (require 'evil-leader)
      (evil-mode t)
@@ -168,6 +173,67 @@ Changes by git should automatically be refreshed the files files are changed on 
 #+END_SRC
 
 *** Org Mode
+**** Set up Agenda & 
+#+BEGIN_SRC emacs-lisp
+  (setq org-agenda-files '("~/Dropbox/org/gtd/inbox.org"
+                           "~/Dropbox/org/gtd/projects.org"
+                           "~/Dropbox/org/gtd/tickler.org"
+                           ))
+    
+  (setq org-agenda-custom-commands 
+        '(("o" "At the office" tags-todo "@office"
+           ((org-agenda-overriding-header "Office")
+            (org-agenda-skip-function #'my-org-agenda-skip-all-siblings-but-first)))))
+
+  (defun my-org-agenda-skip-all-siblings-but-first ()
+    "Skip all but the first non-done entry."
+    (let (should-skip-entry)
+      (unless (org-current-is-todo)
+        (setq should-skip-entry t))
+      (save-excursion
+        (while (and (not should-skip-entry) (org-goto-sibling t))
+          (when (org-current-is-todo)
+            (setq should-skip-entry t))))
+      (when should-skip-entry
+        (or (outline-next-heading)
+            (goto-char (point-max))))))
+		  
+  (defun org-current-is-todo ()
+    (string= "TODO" (org-get-todo-state)))
+#+END_SRC
+
+#+RESULTS:
+: org-current-is-todo
+
+*** Set up capure templates for Inbox and Ticker
+#+BEGIN_SRC emacs-lisp
+  (setq org-capture-templates
+        '(("t" "Todo [inbox]" entry
+           (file+headline "~/Dropbox/org/gtd/inbox.org" "In")
+           "* TODO %i%?")
+          ("T" "Tickler" entry
+           (file+headline "~/Dropbox/org/gtd/tickler.org" "Tickler")
+              "* %i%? \n %U")))
+  (global-set-key (kbd "C-c a") 'org-agenda)
+  (global-set-key (kbd "C-c c") 'org-capture)
+  (setq org-todo-keywords '((sequence "TODO(t)" "WAITING(w)" "|" "DONE(d)" "CANCELLED(c)")))
+#+END_SRC
+
+#+RESULTS:
+| sequence | TODO(t) | WAITING(w) |   |   | DONE(d) | CANCELLED(c) |
+
+**** Set up refile targets for GTD files
+#+BEGIN_SRC emacs-lisp
+  (setq org-refile-use-outline-path nil)
+  (setq org-refile-targets '(("~/Dropbox/org/gtd/projects.org" :maxlevel . 1)
+                             ("~/Dropbox/org/gtd/tickler.org" :maxlevel . 2)
+                             ("~/Dropbox/org/gtd/someday.org" :level . 1)))
+#+END_SRC
+
+#+RESULTS:
+: ((gtd/projects.org :maxlevel . 1) (gtd/tickler.org :maxlevel . 2) (gtd/someday.org :level . 1))
+
+
 **** Configure org to work with EVIL key bindings
 #+BEGIN_SRC emacs-lisp
 (require 'evil-org)
@@ -189,10 +255,6 @@ Changes by git should automatically be refreshed the files files are changed on 
     ))
 
 #+END_SRC
-*** Startup Commands
-(require 'evil)
-(evil-mode t)
-
 *** Elfeed RSS
 #+BEGIN_SRC emacs-lisp
   (setq elfeed-feeds
@@ -218,7 +280,7 @@ Changes by git should automatically be refreshed the files files are changed on 
   ))
 #+END_SRC
 
-*** Projectile    
+*** Projectile
 Enable projectile. Configuration reference: http://tuhdo.github.io/helm-projectile.html:
 #+BEGIN_SRC emacs-lisp
   (require 'projectile)
@@ -230,6 +292,35 @@ Enable projectile. Configuration reference: http://tuhdo.github.io/helm-projecti
   (setq projectile-indexing-method 'alien)
   ;; Use helm 
   (setq projectile-switch-project-action 'helm-projectile)
+#+END_SRC
+*** Dired sidebar
+#+BEGIN_SRC emacs-lisp
+  (use-package dired-sidebar
+    :bind (("C-x C-n" . dired-sidebar-toggle-sidebar))
+    :ensure t
+    :commands (dired-sidebar-toggle-sidebar)
+    :config
+    (setq dired-sidebar-subtree-line-prefix " .")
+    (cond
+     ((eq system-type 'darwin)
+      (if (display-graphic-p)
+          (setq dired-sidebar-theme 'icons)
+        (setq dired-sidebar-theme 'nerd))
+      (setq dired-sidebar-face '(:family "Helvetica" :height 140)))
+     ((eq system-type 'windows-nt)
+      (setq dired-sidebar-theme 'nerd)
+      (setq dired-sidebar-face '(:family "Lucida Sans Unicode" :height 110)))
+     (:default
+      (setq dired-sidebar-theme 'nerd)
+      (setq dired-sidebar-face '(:family "Arial" :height 140))))
+
+    (setq dired-sidebar-use-term-integration t)
+    (setq dired-sidebar-use-custom-font t)
+
+    (use-package all-the-icons-dired
+      ;; M-x all-the-icons-install-fonts
+      :ensure t
+      :commands (all-the-icons-dired-mode)))
 #+END_SRC
 ** Editing
    
@@ -307,16 +398,14 @@ Enable projectile. Configuration reference: http://tuhdo.github.io/helm-projecti
   (recentf-mode 1)
   #+END_SRC
 ** Theme and Appearance
-   
- Turn on line numbers.
+*** Turn on line numbers-- remove in future emacs versions
 
  #+BEGIN_SRC emacs-lisp
     (global-linum-mode)
  #+END_SRC
 
- Set the default font.
+*** Set the default font and font scaling bindings
  #+BEGIN_SRC emacs-lisp
- (set-default-font "monospace-15")
  (setq line-spacing '0.25)
 
  ;; increase and decrease text size
@@ -324,27 +413,34 @@ Enable projectile. Configuration reference: http://tuhdo.github.io/helm-projecti
  (global-set-key (kbd "C--") 'text-scale-decrease)
  #+END_SRC
 
- Remove the toolbar and scrollbar. Enable the menu bar.
-
+*** Remove the toolbar and scrollbar. Enable the menu bar.
  #+BEGIN_SRC emacs-lisp
  (if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
  (if (fboundp 'tool-bar-mode) (tool-bar-mode -1))
  (if (fboundp 'menu-bar-mode) (menu-bar-mode 1))
  #+END_SRC
 
-
-Use a light-on-dark scheme
-
+*** Set up modeline and set theme
 #+BEGIN_SRC emacs-lisp
-(load-theme 'zenburn t)
+
+  (require 'spaceline-config)
+  (spaceline-spacemacs-theme)
+  (spaceline-helm-mode)
+  (load-theme 'doom-one t)
 #+END_SRC
 
+*** Startup behavior- open todo.org
  #+BEGIN_SRC emacs-lisp
  ;; Go straight to another file on startup
  (setq inhibit-startup-message t)
- (find-file (concat org-directory "emacs.org"))
+ (find-file (concat org-directory "gtd/inbox.org"))
  #+END_SRC
 ** Language Configuration
+*** Python
+#+BEGIN_SRC emacs-lisp
+  (require 'elpy)
+  (elpy-enable)
+#+END_SRC
 *** Racket 
 #+BEGIN_SRC emacs-lisp
  (require 'racket-mode)
@@ -353,16 +449,50 @@ Use a light-on-dark scheme
  (setq racket-raco-program "\"C:/Program Files/Racket/raco.exe\"")
  (setq org-babel-racket-command "\"C:/Program Files/Racket/racket.exe\"")
  #+END_SRC
-
-
- 
- 
 *** Rust
 #+BEGIN_SRC emacs-lisp
   (require 'rust-mode)
   (autoload 'rust-mode "rust-mode" nil t)
   (add-to-list 'auto-mode-alist '("\\.rs\\'" . rust-mode))
   (add-hook 'rust-mode-hook 'cargo-minor-mode)
+#+END_SRC
+*** Typescript
+#+BEGIN_SRC emacs-lisp
+  (defun setup-tide-mode ()
+    (interactive)
+    (tide-setup)
+    (flycheck-mode +1)
+    (setq flycheck-check-syntax-automatically '(save mode-enabled))
+    (eldoc-mode +1)
+    (tide-hl-identifier-mode +1)
+    ;; company is an optional dependency. You have to
+    ;; install it separately via package-install
+    ;; `M-x package-install [ret] company`
+    (company-mode +1))
+
+  ;; aligns annotation to the right hand side
+  (setq company-tooltip-align-annotations t)
+
+  ;; formats the buffer before saving
+  (add-hook 'before-save-hook 'tide-format-before-save)
+
+  (add-hook 'typescript-mode-hook #'setup-tide-mode)
+
+  (require 'web-mode)
+  (add-to-list 'auto-mode-alist '("\\.tsx\\'" . web-mode))
+  (add-hook 'web-mode-hook
+            (lambda ()
+              (when (string-equal "tsx" (file-name-extension buffer-file-name))
+                (setup-tide-mode))))
+  ;; enable typescript-tslint checker
+  (flycheck-add-mode 'typescript-tslint 'web-mode)
+
+  (use-package tide
+    :ensure t
+    :after (typescript-mode company flycheck)
+    :hook ((typescript-mode . tide-setup)
+           (typescript-mode . tide-hl-identifier-mode)
+           (before-save . tide-format-before-save)))
 #+END_SRC
 *** 
     
