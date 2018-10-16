@@ -21,44 +21,50 @@ Changes by git should automatically be refreshed the files files are changed on 
  to a single declaration.
 
 #+BEGIN_SRC emacs-lisp
-   ;; Packages to install (alternative to using =M-x package-install=)
-   ;; Additional packages have been manually added to the =vendor=
-   ;; directory.
-   (defvar my-packages
-     '(
-       ;; Emacs vim
-       evil
-       evil-magit
-       evil-leader
-       evil-org
+  ;; Packages to install (alternative to using =M-x package-install=)
+  ;; Additional packages have been manually added to the =vendor=
+  ;; directory.
+  (defvar my-packages
+    '(
+      ;; Emacs vim
+      evil
+      evil-magit
+      evil-leader
+      evil-org
 
-       ;; navigation
-       helm
-       projectile
-       helm-projectile
+      ;; navigation
+      helm
+      projectile
+      helm-projectile
 
-       ;; git and source control
-       magit
+      ;; git and source control
+      magit
 
-       ;; Themes
-       leuven-theme
-       zenburn-theme
-       doom-themes
+      ;; Themes
+      leuven-theme
+      zenburn-theme
+      doom-themes
 
-       ;; Language
-       racket-mode
-       rust-mode
-       cargo
+      ;; Language
+      racket-mode
+      rust-mode
+      cargo
 
-       ;; RSS
-       elfeed
+      ;; RSS
+      elfeed
+      ;; Others
+      spaceline
+      elpy
+      web-mode
+      tide
 
 
-       ))
 
-   (dolist (p my-packages)
-     (when (not (package-installed-p p))
-       (package-install p)))
+      ))
+
+  (dolist (p my-packages)
+    (when (not (package-installed-p p))
+      (package-install p)))
  #+END_SRC
 
 ** Package Settings and Installation
@@ -285,13 +291,17 @@ Enable projectile. Configuration reference: http://tuhdo.github.io/helm-projecti
 #+BEGIN_SRC emacs-lisp
   (require 'projectile)
   (require 'helm-projectile)
-  (projectile-mode)
+  (projectile-global-mode)
+  (define-key projectile-mode-map (kbd "s-p") 'projectile-command-map)
+  (define-key projectile-mode-map (kbd "C-c p") 'projectile-command-map)
   (setq projectile-completion-system 'helm)
 
-  ;; use indexing external indexing tools
-  (setq projectile-indexing-method 'alien)
+  ;; use indexing external indexing tools on windows
+  (if (eq system-type 'windows-nt)
+      (setq projectile-indexing-method 'alien))
   ;; Use helm 
   (setq projectile-switch-project-action 'helm-projectile)
+  (helm-projectile-on)
 #+END_SRC
 *** Dired sidebar
 #+BEGIN_SRC emacs-lisp

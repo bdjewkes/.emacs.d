@@ -27,7 +27,7 @@
  '(dumb-jump-mode t)
  '(package-selected-packages
    (quote
-    (restclient web-mode tide all-the-icons-dired use-package dired-sidebar spaceline-all-the-icons spaceline fsharp-mode typescript-mode ag doom-themes doom jedi elpy dumb-jump neotree zenburn-theme racket-mode ob-rust markdown-mode leuven-theme jinja2-mode helm-projectile geiser flycheck evil-tabs evil-paredit evil-org evil-magit evil-leader elfeed distinguished-theme darktooth-theme color-theme-solarized color-theme-sanityinc-tomorrow cargo base16-theme auto-complete ace-jump-mode))))
+    (restclient web-mode tide all-the-icons-dired use-package dired-sidebar fsharp-mode typescript-mode ag doom-themes doom jedi elpy dumb-jump neotree zenburn-theme racket-mode ob-rust markdown-mode leuven-theme jinja2-mode helm-projectile geiser flycheck evil-tabs evil-paredit evil-org evil-magit evil-leader elfeed distinguished-theme darktooth-theme color-theme-solarized color-theme-sanityinc-tomorrow cargo base16-theme auto-complete ace-jump-mode))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
