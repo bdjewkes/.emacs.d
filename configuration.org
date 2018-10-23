@@ -443,7 +443,7 @@ Enable projectile. Configuration reference: http://tuhdo.github.io/helm-projecti
  #+BEGIN_SRC emacs-lisp
  ;; Go straight to another file on startup
  (setq inhibit-startup-message t)
- (find-file (concat org-directory "gtd/inbox.org"))
+ (find-file "~/Dropbox/org/gtd/inbox.org")
  #+END_SRC
 ** Language Configuration
 *** Python
@@ -483,9 +483,6 @@ Enable projectile. Configuration reference: http://tuhdo.github.io/helm-projecti
   ;; aligns annotation to the right hand side
   (setq company-tooltip-align-annotations t)
 
-  ;; formats the buffer before saving
-  (add-hook 'before-save-hook 'tide-format-before-save)
-
   (add-hook 'typescript-mode-hook #'setup-tide-mode)
 
   (require 'web-mode)
@@ -494,9 +491,6 @@ Enable projectile. Configuration reference: http://tuhdo.github.io/helm-projecti
             (lambda ()
               (when (string-equal "tsx" (file-name-extension buffer-file-name))
                 (setup-tide-mode))))
-  ;; enable typescript-tslint checker
-  (flycheck-add-mode 'typescript-tslint 'web-mode)
-
   (use-package tide
     :ensure t
     :after (typescript-mode company flycheck)
