@@ -8,12 +8,51 @@ To get help: =C-h C-h=
 To get help on a mode: =C-h m=
 
 Some parts of this file were copied from other files and tutorials.
+
+* Improvements:
+** TODO Move elfeed blog list to a file, add to it with a capture template/refile
+** TODO add markdown to org configuration
+** TODO add habits to org configuration
+** TODO Get JSX working correctly in JS2 mode
 * Configuration
 ** Global Configuration
-Changes by git should automatically be refreshed the files files are changed on disk (such as when a git checkout occurs).
+*** Changes by git should automatically be refreshed the files files are changed on disk (such as when a git checkout occurs).
 #+BEGIN_SRC emacs-lisp
-(global-auto-revert-mode t)
+  (global-auto-revert-mode t)
 #+END_SRC
+*** Autosave after 30s of idle time; this will keep emacs work in sync with beorg
+#+BEGIN_SRC emacs-lisp
+  (run-with-idle-timer 30 t 'org-save-all-org-buffers)
+#+END_SRC
+*** Use windows browser when opening links on wsl
+#+BEGIN_SRC emacs-lisp
+ ;; from: https://www.reddit.com/r/bashonubuntuonwindows/comments/70i8aa/making_emacs_on_wsl_open_links_in_windows_web/
+ ;; Determine the specific system type. 
+ ;; Emacs variable system-type doesn't yet have a "wsl/linux" value,
+ ;; so I'm front-ending system-type with my variable: sysTypeSpecific.
+ ;; I'm no elisp hacker, so I'm diverging from the elisp naming conventioN
+ ;; to ensure that I'm not stepping on any pre-existing variable.
+ (setq-default sysTypeSpecific  system-type) ;; get the system-type value
+
+ (cond 
+  ;; If type is "gnu/linux", override to "wsl/linux" if it's WSL.
+  ((eq sysTypeSpecific 'gnu/linux)  
+   (when (string-match "Linux.*Microsoft.*Linux" 
+                       (shell-command-to-string "uname -a"))
+
+     (setq-default sysTypeSpecific "wsl/linux") ;; for later use.
+     (setq
+      cmdExeBin"/mnt/c/Windows/System32/cmd.exe"
+      cmdExeArgs '("/c" "start" "") )
+     (setq
+      browse-url-generic-program  cmdExeBin
+      browse-url-generic-args     cmdExeArgs
+      browse-url-browser-function 'browse-url-generic)
+     )))
+#+END_SRC
+
+#+RESULTS:
+: browse-url-generic
 
 ** Install Packages 
  This is a list of packages to install, to make restoring configuration more streamlined across devices.
@@ -36,6 +75,7 @@ Changes by git should automatically be refreshed the files files are changed on 
       helm
       projectile
       helm-projectile
+      dumb-jump
 
       ;; git and source control
       magit
@@ -46,20 +86,26 @@ Changes by git should automatically be refreshed the files files are changed on 
       doom-themes
 
       ;; Language
+      js2-mode
       racket-mode
       rust-mode
       cargo
+   
 
       ;; RSS
       elfeed
+
       ;; Others
       spaceline
       elpy
       web-mode
       tide
+      zeal-at-point
 
-
-
+      ;; Completion
+      company
+      tern
+      company-tern
       ))
 
   (dolist (p my-packages)
@@ -283,10 +329,10 @@ Changes by git should automatically be refreshed the files files are changed on 
         "https://this-week-in-rust.org/rss.xml"
         "http://lesswrong.com/.rss"
         "https://jvns.ca/"
-  ))
+        ))
 #+END_SRC
 
-*** Projectile
+*** Projectile 
 Enable projectile. Configuration reference: http://tuhdo.github.io/helm-projectile.html:
 #+BEGIN_SRC emacs-lisp
   (require 'projectile)
@@ -332,8 +378,16 @@ Enable projectile. Configuration reference: http://tuhdo.github.io/helm-projecti
       :ensure t
       :commands (all-the-icons-dired-mode)))
 #+END_SRC
+*** Code navigation
+*** Enable company in all buffers for autocomplete
+#+BEGIN_SRC emacs-lisp
+  (add-hook 'after-init-hook 'global-company-mode)
+#+END_SRC
+**** Enabled dumb-jump for consistent jump to definition behavior across projects
+#+BEGIN_SRC emacs-lisp
+(dumb-jump-mode)
+#+END_SRC
 ** Editing
-   
 *** Use utf-8
     
 #+BEGIN_SRC emacs-lisp
@@ -350,6 +404,12 @@ Enable projectile. Configuration reference: http://tuhdo.github.io/helm-projecti
 ;; Treat clipboard input as UTF-8 string first; compound text next, etc.
 (setq x-select-request-type '(UTF8_STRING COMPOUND_TEXT TEXT STRING))
 
+#+END_SRC
+*** Flycheck & global default syntax checking
+#+BEGIN_SRC emacs-lisp
+  (use-package flycheck
+    :ensure t
+    :init (global-flycheck-mode))
 #+END_SRC
 *** Syntax higlighting and tabs
 
@@ -406,7 +466,18 @@ Enable projectile. Configuration reference: http://tuhdo.github.io/helm-projecti
   (setq recentf-save-file (concat user-emacs-directory ".recentf"))
   (require 'recentf)
   (recentf-mode 1)
-  #+END_SRC
+  #+END_SRC     
+*** Documentation at point from Zeal
+  #+BEGIN_SRC emacs-lisp
+    (require 'zeal-at-point)
+    (add-to-list 'exec-path "C:/Program Files/Zeal")
+    (add-to-list 'zeal-at-point-mode-alist '(python-mode . "python3"))
+    (global-set-key (kbd "C-c <f12>") 'zeal-at-point)
+
+  #+END_SRC  
+
+  #+RESULTS:
+  : zeal-at-point
 ** Theme and Appearance
 *** Turn on line numbers-- remove in future emacs versions
 
@@ -432,7 +503,6 @@ Enable projectile. Configuration reference: http://tuhdo.github.io/helm-projecti
 
 *** Set up modeline and set theme
 #+BEGIN_SRC emacs-lisp
-
   (require 'spaceline-config)
   (spaceline-spacemacs-theme)
   (spaceline-helm-mode)
@@ -446,11 +516,44 @@ Enable projectile. Configuration reference: http://tuhdo.github.io/helm-projecti
  (find-file "~/Dropbox/org/gtd/inbox.org")
  #+END_SRC
 ** Language Configuration
+*** HTML & templates
+- Use web-mode for editing html files & django templates.  The django engine is being set by default for all .html extensions
+  
+#+BEGIN_SRC emacs-lisp
+(require 'web-mode)
+(add-to-list 'auto-mode-alist '("\\.html?\\'" . web-mode))
+(setq web-mode-engines-alist
+      '(("django"    . "\\.html\\'"))
+)
+#+END_SRC
+
+#+RESULTS:
+
 *** Python
+**** Use elpy for editing python files.
 #+BEGIN_SRC emacs-lisp
   (require 'elpy)
   (elpy-enable)
 #+END_SRC
+**** set up mypy for static type checking
+#+BEGIN_SRC emacs-lisp
+(flycheck-define-checker
+    python-mypy ""
+    :command ("mypy"
+              "--ignore-missing-imports" "--fast-parser"
+              "--python-version" "3.6"
+              source-original)
+    :error-patterns
+    ((error line-start (file-name) ":" line ": error:" (message) line-end))
+    :modes python-mode)
+
+(add-to-list 'flycheck-checkers 'python-mypy t)
+(flycheck-add-next-checker 'python-pylint 'python-mypy t)
+#+END_SRC
+
+#+RESULTS:
+| python-mypy |
+
 *** Racket 
 #+BEGIN_SRC emacs-lisp
  (require 'racket-mode)
@@ -467,12 +570,13 @@ Enable projectile. Configuration reference: http://tuhdo.github.io/helm-projecti
   (add-hook 'rust-mode-hook 'cargo-minor-mode)
 #+END_SRC
 *** Typescript
+    
 #+BEGIN_SRC emacs-lisp
   (defun setup-tide-mode ()
     (interactive)
     (tide-setup)
     (flycheck-mode +1)
-    (setq flycheck-check-syntax-automatically '(save mode-enabled))
+    (setq flycheck-check-syntax-automatically '(save mode-enabled idle-change new-line))
     (eldoc-mode +1)
     (tide-hl-identifier-mode +1)
     ;; company is an optional dependency. You have to
@@ -483,6 +587,8 @@ Enable projectile. Configuration reference: http://tuhdo.github.io/helm-projecti
   ;; aligns annotation to the right hand side
   (setq company-tooltip-align-annotations t)
 
+  ;; Uncomment to add buffer formating before saving
+  ;; (add-hook 'before-save-hook 'tide-format-before-save)
   (add-hook 'typescript-mode-hook #'setup-tide-mode)
 
   (require 'web-mode)
@@ -491,12 +597,35 @@ Enable projectile. Configuration reference: http://tuhdo.github.io/helm-projecti
             (lambda ()
               (when (string-equal "tsx" (file-name-extension buffer-file-name))
                 (setup-tide-mode))))
+  ;; enable typescript-tslint checker
+  (flycheck-add-mode 'typescript-tslint 'web-mode)
+
   (use-package tide
     :ensure t
     :after (typescript-mode company flycheck)
     :hook ((typescript-mode . tide-setup)
            (typescript-mode . tide-hl-identifier-mode)
-           (before-save . tide-format-before-save)))
+           ))
 #+END_SRC
-*** 
+
+*** Javascript
+#+BEGIN_SRC emacs-lisp
+(require 'js2-mode)
+(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+
+;; Better imenu
+(add-hook 'js2-mode-hook #'js2-imenu-extras-mode)
+
+(require 'company)
+(require 'company-tern)
+
+(add-to-list 'company-backends 'company-tern)
+(add-hook 'js2-mode-hook (lambda ()
+                           (tern-mode)
+                           (company-mode)))
+#+END_SRC
+
+#+RESULTS:
+| lambda | nil | (tern-mode) | (company-mode) |
+
     
