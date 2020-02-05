@@ -249,7 +249,7 @@ Some parts of this file were copied from other files and tutorials.
       (when should-skip-entry
         (or (outline-next-heading)
             (goto-char (point-max))))))
-		  
+          
   (defun org-current-is-todo ()
     (string= "TODO" (org-get-todo-state)))
 #+END_SRC
@@ -479,6 +479,19 @@ Enable projectile. Configuration reference: http://tuhdo.github.io/helm-projecti
   #+RESULTS:
   : zeal-at-point
 ** Theme and Appearance
+*** Flash the mode line instead of dinging the alarm bell
+    Reference here: https://www.emacswiki.org/emacs/AlarmBell 
+#+BEGIN_SRC emacs-lisp
+    (setq visible-bell nil
+        ring-bell-function 'flash-mode-line)
+    (defun flash-mode-line ()
+    (invert-face 'mode-line)
+    (run-with-timer 0.1 nil #'invert-face 'mode-line))
+#+END_SRC 
+
+#+RESULTS:
+: flash-mode-line
+
 *** Turn on line numbers-- remove in future emacs versions
 
  #+BEGIN_SRC emacs-lisp
