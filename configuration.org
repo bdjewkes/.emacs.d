@@ -227,10 +227,15 @@ Some parts of this file were copied from other files and tutorials.
                            "~/Dropbox/org/gtd/tickler.org"
                            ))
     
-  (setq org-agenda-custom-commands 
+  (setq org-agenda-custom-commands
         '(("o" "At the office" tags-todo "@office"
            ((org-agenda-overriding-header "Office")
+            (org-agenda-skip-function #'my-org-agenda-skip-all-siblings-but-first)))
+          ("r" "Read something" tags-todo "@reading"
+           ((org-agenda-overriding-header "Reading")
             (org-agenda-skip-function #'my-org-agenda-skip-all-siblings-but-first)))))
+
+
 
   (defun my-org-agenda-skip-all-siblings-but-first ()
     "Skip all but the first non-done entry."
