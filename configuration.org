@@ -9,11 +9,6 @@ To get help on a mode: =C-h m=
 
 Some parts of this file were copied from other files and tutorials.
 
-* Improvements:
-** TODO Move elfeed blog list to a file, add to it with a capture template/refile
-** TODO add markdown to org configuration
-** TODO add habits to org configuration
-** TODO Get JSX working correctly in JS2 mode
 * Configuration
 ** Global Configuration
 *** Changes by git should automatically be refreshed the files files are changed on disk (such as when a git checkout occurs).
